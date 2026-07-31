@@ -1,20 +1,24 @@
 package sbank.db
 
-import sbank.domain.*
+import java.time.LocalDate
+
 import cats.effect.*
 import cats.syntax.all.*
+
+import sbank.domain.*
 import skunk.*
 import skunk.implicits.*
 
-import java.time.LocalDate
-
 trait LinkedAccounts[F[_]] {
+
   def add(a: LinkedBankAccount): F[LinkedBankAccount]
   def listFor(userId: UserId): F[List[LinkedBankAccount]]
   def find(id: LinkedAccountId): F[Option[LinkedBankAccount]]
+
 }
 
 object LinkedAccounts {
+
   import Codecs.{linkedAccount as accountC, linkedAccountId as accountIdC, userId as userIdC}
 
   def make[F[_]: Concurrent](pool: Resource[F, Session[F]]): LinkedAccounts[F] =
@@ -31,33 +35,41 @@ object LinkedAccounts {
     }
 
   private object Q {
+
     val insert: Query[LinkedBankAccount, LinkedBankAccount] =
       sql"""INSERT INTO linked_bank_accounts (id, user_id, routing_number, account_number_last4,
                                                 holder_name, plaid_item_id, added_at)
             VALUES $accountC
             RETURNING id, user_id, routing_number, account_number_last4,
                       holder_name, plaid_item_id, added_at""".query(accountC)
+
     val listFor: Query[UserId, LinkedBankAccount] =
       sql"""SELECT id, user_id, routing_number, account_number_last4,
                    holder_name, plaid_item_id, added_at
             FROM linked_bank_accounts WHERE user_id = $userIdC ORDER BY added_at"""
         .query(accountC)
+
     val byId: Query[LinkedAccountId, LinkedBankAccount] =
       sql"""SELECT id, user_id, routing_number, account_number_last4,
                    holder_name, plaid_item_id, added_at
             FROM linked_bank_accounts WHERE id = $accountIdC""".query(accountC)
+
   }
+
 }
 
 trait AutoPays[F[_]] {
+
   def insert(ap: AutoPay): F[AutoPay]
   def listFor(userId: UserId): F[List[AutoPay]]
   def dueOn(date: LocalDate): F[List[AutoPay]]
   def deactivate(id: AutoPayId): F[Unit]
   def advanceNextRun(id: AutoPayId, next: LocalDate): F[Unit]
+
 }
 
 object AutoPays {
+
   import Codecs.{autoPay as autoPayC, autoPayId as autoPayIdC, userId as userIdC}
   import skunk.codec.all.date
 
@@ -79,6 +91,7 @@ object AutoPays {
     }
 
   private object Q {
+
     val insert: Query[AutoPay, AutoPay] =
       sql"""INSERT INTO auto_pays (id, user_id, card_id, source_account_id,
                                     cadence, amount_minor, next_run_on, active)
@@ -101,5 +114,7 @@ object AutoPays {
 
     val advance: Command[(LocalDate, AutoPayId)] =
       sql"UPDATE auto_pays SET next_run_on = $date WHERE id = $autoPayIdC".command
+
   }
+
 }

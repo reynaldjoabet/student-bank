@@ -1,18 +1,18 @@
 package sbank.http
 
-import sbank.domain.*
-import sbank.db.*
-import sbank.service.*
+import java.time.Instant
+import java.util.UUID
 
 import cats.effect.*
 import cats.syntax.all.*
+
+import sbank.db.*
+import sbank.domain.*
+import sbank.service.*
 import io.circe.syntax.*
 import org.http4s.*
 import org.http4s.circe.CirceEntityCodec.*
 import org.http4s.dsl.Http4sDsl
-
-import java.time.Instant
-import java.util.UUID
 
 final class Routes[F[_]: Async](
     auth: Auth[F],
@@ -33,6 +33,7 @@ final class Routes[F[_]: Async](
   import Json.given
 
   private object Principal {
+
     def unapply(req: Request[F]): Option[UserId] =
       req.headers
         .get(org.typelevel.ci.CIString("X-User-Id"))
@@ -42,26 +43,35 @@ final class Routes[F[_]: Async](
             .toOption
             .map(UserId.assume)
         )
+
   }
 
   private object CardVar {
     def unapply(s: String): Option[CardId] = uuidVar(s, CardId.assume)
   }
   private object TxVar {
+
     def unapply(s: String): Option[TransactionId] =
       uuidVar(s, TransactionId.assume)
+
   }
   private object VideoVar {
+
     def unapply(s: String): Option[EducationVideoId] =
       uuidVar(s, EducationVideoId.assume)
+
   }
   private object TaxDocVar {
+
     def unapply(s: String): Option[TaxDocumentId] =
       uuidVar(s, TaxDocumentId.assume)
+
   }
   private object NotificationVar {
+
     def unapply(s: String): Option[NotificationId] =
       uuidVar(s, NotificationId.assume)
+
   }
 
   private def uuidVar[A](s: String, f: UUID => A): Option[A] =
@@ -319,4 +329,5 @@ final class Routes[F[_]: Async](
   }
 
   private object Limit extends OptionalQueryParamDecoderMatcher[Int]("limit")
+
 }

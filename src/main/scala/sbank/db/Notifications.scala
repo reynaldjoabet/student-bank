@@ -1,30 +1,34 @@
 package sbank.db
 
-import sbank.domain.*
-import skunk.*
-import skunk.implicits.*
-import skunk.codec.all.*
 import cats.effect.{Concurrent, Resource}
 import cats.syntax.all.toFlatMapOps
 import cats.syntax.all.toFunctorOps
+
+import sbank.domain.*
+import skunk.*
+import skunk.codec.all.*
+import skunk.implicits.*
+
 //import cats.syntax.functor.toFunctorOps
 trait Notifications[F[_]] {
+
   def upsertPref(p: NotificationPref): F[Unit]
   def prefsFor(userId: UserId): F[List[NotificationPref]]
   def insertEvent(e: NotificationEvent): F[NotificationEvent]
   def listFor(userId: UserId, limit: Int): F[List[NotificationEvent]]
   def markRead(id: NotificationId, at: java.time.Instant): F[Unit]
+
 }
 
 object Notifications {
 
   import Codecs.{
-    notificationPref as prefC,
+    notificationChannel,
     notificationEvent as eventC,
     notificationId as eventIdC,
-    userId as userIdC,
     notificationKind,
-    notificationChannel
+    notificationPref as prefC,
+    userId as userIdC
   }
 
   def make[F[_]: Concurrent](pool: Resource[F, Session[F]]): Notifications[F] =
@@ -58,6 +62,7 @@ object Notifications {
     }
 
   private object Q {
+
     val upsertPref: Command[NotificationPref] =
       sql"""INSERT INTO notification_prefs (user_id, kind, channel, enabled)
             VALUES $prefC
@@ -83,5 +88,7 @@ object Notifications {
       sql"UPDATE notification_events SET read_at = $timestamptz WHERE id = $eventIdC".command
 
     val _ = (notificationKind, notificationChannel) // silence unused-import
+
   }
+
 }

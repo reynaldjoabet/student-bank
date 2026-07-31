@@ -1,47 +1,61 @@
 package sbank.db
 
+import java.time.{Instant, LocalDate, ZoneOffset}
+
 import sbank.domain.*
 import skunk.*
 import skunk.codec.all.*
 import org.typelevel.twiddles.syntax.*
 import io.github.iltotore.iron.constraint.all.*
 import io.github.iltotore.iron.skunk.*
-import java.time.{Instant, LocalDate, ZoneOffset}
 
 object Codecs {
 
   // ---- ids ----
   val userId: Codec[UserId] = uuid.imap(UserId.assume)(_.value)
   val cardId: Codec[CardId] = uuid.imap(CardId.assume)(_.value)
+
   val transactionId: Codec[TransactionId] =
     uuid.imap(TransactionId.assume)(_.value)
+
   val disputeId: Codec[DisputeId] = uuid.imap(DisputeId.assume)(_.value)
-  val loanId: Codec[LoanId] = uuid.imap(LoanId.assume)(_.value)
+  val loanId: Codec[LoanId]       = uuid.imap(LoanId.assume)(_.value)
+
   val linkedAccountId: Codec[LinkedAccountId] =
     uuid.imap(LinkedAccountId.assume)(_.value)
+
   val autoPayId: Codec[AutoPayId] = uuid.imap(AutoPayId.assume)(_.value)
+
   val pointsLedgerId: Codec[PointsLedgerId] =
     uuid.imap(PointsLedgerId.assume)(_.value)
+
   val educationVideoId: Codec[EducationVideoId] =
     uuid.imap(EducationVideoId.assume)(_.value)
+
   val watchProgressId: Codec[WatchProgressId] =
     uuid.imap(WatchProgressId.assume)(_.value)
+
   val taxDocumentId: Codec[TaxDocumentId] =
     uuid.imap(TaxDocumentId.assume)(_.value)
+
   val notificationId: Codec[NotificationId] =
     uuid.imap(NotificationId.assume)(_.value)
+
   val supportTicketId: Codec[SupportTicketId] =
     uuid.imap(SupportTicketId.assume)(_.value)
 
   // ---- scalars ----
   val email: Codec[Email] =
     varchar(254).refined[EmailConstraint].imap(Email.assume)(_.value)
+
   val phone: Codec[PhoneE164] = varchar(16)
     .refined[Match["""^\+[1-9][0-9]{7,14}$"""]]
     .imap(PhoneE164.assume)(_.value)
+
   val passwordHash: Codec[PasswordHash] = varchar(120)
     .refined[Not[Blank] & MaxLength[120]]
     .imap(PasswordHash.assume)(_.value)
+
   val fullName: Codec[FullName] = varchar(200)
     .refined[Not[Blank] & MaxLength[200]]
     .imap(FullName.assume)(_.value)
@@ -49,6 +63,7 @@ object Codecs {
   val ssnHash: Codec[SsnHash] = bpchar(64)
     .refined[FixedLength[64] & Match["^[0-9a-f]{64}$"]]
     .imap(SsnHash.assume)(_.value)
+
   val ssnLast4: Codec[SsnLast4] = bpchar(4)
     .refined[FixedLength[4] & Match["^[0-9]{4}$"]]
     .imap(SsnLast4.assume)(_.value)
@@ -56,32 +71,42 @@ object Codecs {
   val cardToken: Codec[CardToken] = varchar(128)
     .refined[Not[Blank] & MaxLength[128]]
     .imap(CardToken.assume)(_.value)
+
   val galileoPrn: Codec[GalileoPrn] =
     varchar(16).refined[Match["^[0-9]{9,16}$"]].imap(GalileoPrn.assume)(_.value)
+
   val last4: Codec[Last4] = bpchar(4)
     .refined[FixedLength[4] & Match["^[0-9]{4}$"]]
     .imap(Last4.assume)(_.value)
+
   val cardExpiry: Codec[CardExpiry] = varchar(5)
     .refined[Match["""^(0[1-9]|1[0-2])/[0-9]{2}$"""]]
     .imap(CardExpiry.assume)(_.value)
+
   val cardBrand: Codec[CardBrand] = varchar(32)
     .refined[Not[Blank] & MaxLength[32]]
     .imap(CardBrand.assume)(_.value)
 
   //
   val amountMinor: Codec[AmountMinor] = int8.imap(AmountMinor.assume)(_.value)
+
   val positiveAmount: Codec[PositiveAmount] =
     int8.refined[Positive].imap(PositiveAmount.assume)(_.value)
+
   val currency: Codec[CurrencyCode] =
     bpchar(3).refined[Match["^[A-Z]{3}$"]].imap(CurrencyCode.assume)(_.value)
+
   val creditScore: Codec[CreditScore] = int4
     .refined[GreaterEqual[300] & LessEqual[850]]
     .imap(CreditScore.assume)(_.value)
+
   val aprBps: Codec[AprBps] = int4
     .refined[GreaterEqual[0] & LessEqual[100_000]]
     .imap(AprBps.assume)(_.value)
+
   val creditLimit: Codec[CreditLimit] =
     int8.refined[Positive].imap(CreditLimit.assume)(_.value)
+
   val points: Codec[Points] =
     int8.refined[GreaterEqual[0]].imap(Points.assume)(_.value)
 
@@ -93,15 +118,18 @@ object Codecs {
   val title: Codec[Title] = varchar(200)
     .refined[Not[Blank] & MaxLength[200]]
     .imap(Title.assume)(_.value)
+
   val body: Codec[Body] =
     text.refined[Not[Blank] & MaxLength[8000]].imap(Body.assume)(_.value)
 
   val routingNumber: Codec[RoutingNumber] = bpchar(9)
     .refined[FixedLength[9] & Match["^[0-9]{9}$"]]
     .imap(RoutingNumber.assume)(_.value)
+
   val accountNumber: Codec[AccountNumber] = varchar(34)
     .refined[MinLength[6] & MaxLength[34] & Match["^[A-Z0-9]+$"]]
     .imap(AccountNumber.assume)(_.value)
+
   val blobRef: Codec[BlobRef] = varchar(512)
     .refined[Not[Blank] & MaxLength[512] & Match["^[A-Za-z0-9._/-]+$"]]
     .imap(BlobRef.assume)(_.value)
@@ -128,7 +156,7 @@ object Codecs {
     case "frozen"    => Right(CardStatus.Frozen)
     case "cancelled" => Right(CardStatus.Cancelled)
     case o           => Left(s"unknown card status: $o")
-  } { _.toString.toLowerCase }
+  }(_.toString.toLowerCase)
 
   val transactionKind: Codec[TransactionKind] =
     varchar(20).eimap[TransactionKind] {
@@ -158,7 +186,7 @@ object Codecs {
       case "reversed" => Right(TransactionStatus.Reversed)
       case "declined" => Right(TransactionStatus.Declined)
       case o          => Left(s"unknown tx status: $o")
-    } { _.toString.toLowerCase }
+    }(_.toString.toLowerCase)
 
   val disputeStatus: Codec[DisputeStatus] = varchar(24).eimap[DisputeStatus] {
     case "open"              => Right(DisputeStatus.Open)
@@ -177,7 +205,7 @@ object Codecs {
     case "student"  => Right(LoanKind.Student)
     case "personal" => Right(LoanKind.Personal)
     case o          => Left(s"unknown loan kind: $o")
-  } { _.toString.toLowerCase }
+  }(_.toString.toLowerCase)
 
   val loanStatus: Codec[LoanStatus] = varchar(16).eimap[LoanStatus] {
     case "applied"   => Right(LoanStatus.Applied)
@@ -203,7 +231,7 @@ object Codecs {
     case "redeem"     => Right(PointsEventKind.Redeem)
     case "adjustment" => Right(PointsEventKind.Adjustment)
     case o            => Left(s"unknown points kind: $o")
-  } { _.toString.toLowerCase }
+  }(_.toString.toLowerCase)
 
   val notificationKind: Codec[NotificationKind] =
     varchar(24).eimap[NotificationKind] {
@@ -227,7 +255,7 @@ object Codecs {
       case "email" => Right(NotificationChannel.Email)
       case "sms"   => Right(NotificationChannel.Sms)
       case o       => Left(s"unknown channel: $o")
-    } { _.toString.toLowerCase }
+    }(_.toString.toLowerCase)
 
   val autoPayCadence: Codec[AutoPayCadence] =
     varchar(16).eimap[AutoPayCadence] {
@@ -376,8 +404,9 @@ object Codecs {
 
   val loan: Codec[Loan] =
     (loanId *: userId *: loanKind *: positiveAmount *: aprBps *: int4 *: loanStatus *: int8 *:
-      instant *: instant.opt).imap { case (id, (uid, (k, (prin, (apr, (tm, (st, (rem, (aa, da))))))))) =>
-      Loan(id, uid, k, prin, apr, tm, st, rem, aa, da)
+      instant *: instant.opt).imap {
+      case (id, (uid, (k, (prin, (apr, (tm, (st, (rem, (aa, da))))))))) =>
+        Loan(id, uid, k, prin, apr, tm, st, rem, aa, da)
     }(l =>
       (
         l.id,
@@ -520,8 +549,9 @@ object Codecs {
 
   val notificationEvent: Codec[NotificationEvent] =
     (notificationId *: userId *: notificationKind *: title *: body *: notificationChannel *:
-      instant.opt *: instant.opt *: instant).imap { case (id, (uid, (k, (t, (b, (ch, (da, (ra, ca)))))))) =>
-      NotificationEvent(id, uid, k, t, b, ch, da, ra, ca)
+      instant.opt *: instant.opt *: instant).imap {
+      case (id, (uid, (k, (t, (b, (ch, (da, (ra, ca)))))))) =>
+        NotificationEvent(id, uid, k, t, b, ch, da, ra, ca)
     }(e =>
       (
         e.id,
@@ -541,8 +571,9 @@ object Codecs {
   val supportTicket: Codec[SupportTicket] =
     (supportTicketId *: userId *: varchar(
       16
-    ) *: title *: body *: instant *: instant.opt).imap { case (id, (uid, (ch, (subj, (b, (ca, cla)))))) =>
-      SupportTicket(id, uid, ch, subj, b, ca, cla)
+    ) *: title *: body *: instant *: instant.opt).imap {
+      case (id, (uid, (ch, (subj, (b, (ca, cla)))))) =>
+        SupportTicket(id, uid, ch, subj, b, ca, cla)
     }(t =>
       (
         t.id,
@@ -552,4 +583,5 @@ object Codecs {
         )
       )
     )
+
 }

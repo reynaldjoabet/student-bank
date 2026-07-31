@@ -1,26 +1,36 @@
 package sbank.db
 
-import sbank.domain.*
 import cats.effect.*
 import cats.syntax.all.*
+
+import sbank.domain.*
 import skunk.*
-import skunk.implicits.*
 import skunk.codec.all.*
+import skunk.implicits.*
 
 trait Education[F[_]] {
+
   def upsertVideo(v: EducationVideo): F[EducationVideo]
   def listVideos(limit: Int): F[List[EducationVideo]]
   def find(id: EducationVideoId): F[Option[EducationVideo]]
+
   def progress(
       userId: UserId,
       videoId: EducationVideoId
   ): F[Option[WatchProgress]]
+
   def saveProgress(w: WatchProgress): F[WatchProgress]
+
 }
 
 object Education {
 
-  import Codecs.{educationVideo as videoC, educationVideoId as videoIdC, watchProgress as progressC, userId as userIdC}
+  import Codecs.{
+    educationVideo as videoC,
+    educationVideoId as videoIdC,
+    userId as userIdC,
+    watchProgress as progressC
+  }
 
   def make[F[_]: Concurrent](pool: Resource[F, Session[F]]): Education[F] =
     new Education[F] {
@@ -47,6 +57,7 @@ object Education {
     }
 
   private object Q {
+
     val upsertVideo: Query[EducationVideo, EducationVideo] =
       sql"""INSERT INTO education_videos (id, youtube_id, title, description, duration_sec, points_reward, published_at)
             VALUES $videoC
@@ -79,5 +90,7 @@ object Education {
                   rewarded_at     = EXCLUDED.rewarded_at
             RETURNING id, user_id, video_id, seconds_watched, completed, rewarded_at"""
         .query(progressC)
+
   }
+
 }

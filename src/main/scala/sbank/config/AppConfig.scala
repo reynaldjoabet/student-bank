@@ -1,7 +1,10 @@
 package sbank.config
 
+import scala.concurrent.duration.FiniteDuration
+
 import cats.effect.Sync
 import cats.syntax.all.*
+
 import com.typesafe.config.ConfigFactory
 import io.github.iltotore.iron.*
 import io.github.iltotore.iron.constraint.all.*
@@ -9,8 +12,6 @@ import io.github.iltotore.iron.pureconfig.given
 // `_root_.` bypasses the `pureconfig` sub-package iron brings into scope
 import _root_.pureconfig.*
 import _root_.pureconfig.error.{CannotConvert, ConfigReaderException}
-
-import scala.concurrent.duration.FiniteDuration
 
 // ---------- Refined config primitives ----------
 
@@ -31,9 +32,12 @@ object PositiveLong extends RefinedType[Long, Positive]
 
 // ---------- Enums ----------
 
-/** Postgres SSL modes; mirrors libpq's sslmode parameter. */
-enum SslMode { case Disable, Allow, Prefer, Require, VerifyCa, VerifyFull }
+/**
+  * Postgres SSL modes; mirrors libpq's sslmode parameter.
+  */
+enum SslMode   { case Disable, Allow, Prefer, Require, VerifyCa, VerifyFull }
 object SslMode {
+
   given ConfigReader[SslMode] = ConfigReader[String].emap { raw =>
     raw.trim.toLowerCase.replace('_', '-') match {
       case "disable"     => Right(Disable)
@@ -54,6 +58,7 @@ object SslMode {
   }
 
   extension (m: SslMode) {
+
     def asPostgres: String = m match {
       case Disable    => "disable"
       case Allow      => "allow"
@@ -62,11 +67,14 @@ object SslMode {
       case VerifyCa   => "verify-ca"
       case VerifyFull => "verify-full"
     }
+
   }
+
 }
 
-enum LogLevel { case Trace, Debug, Info, Warn, Error }
+enum LogLevel   { case Trace, Debug, Info, Warn, Error }
 object LogLevel {
+
   given ConfigReader[LogLevel] = ConfigReader[String].emap { raw =>
     raw.trim.toLowerCase match {
       case "trace" => Right(Trace)
@@ -84,10 +92,12 @@ object LogLevel {
         )
     }
   }
+
 }
 
-enum SecretsBackend { case Env, Vault }
+enum SecretsBackend   { case Env, Vault }
 object SecretsBackend {
+
   given ConfigReader[SecretsBackend] = ConfigReader[String].emap { raw =>
     raw.trim.toLowerCase match {
       case "env"   => Right(Env)
@@ -96,6 +106,7 @@ object SecretsBackend {
         Left(CannotConvert(o, "SecretsBackend", "expected: env | vault"))
     }
   }
+
 }
 
 // ---------- Config case classes ----------
@@ -104,7 +115,9 @@ final case class DbConfig(
     host: NonEmptyString,
     port: PortNumber,
     user: NonEmptyString,
-    /** Optional in dev; mandatory in any environment with `ssl != disable`. */
+    /**
+      * Optional in dev; mandatory in any environment with `ssl != disable`.
+      */
     password: Option[NonEmptyString],
     database: NonEmptyString,
     ssl: SslMode,
@@ -134,7 +147,9 @@ final case class HttpConfig(
 final case class ObservabilityConfig(
     serviceName: NonEmptyString,
     environment: NonEmptyString,
-    /** Empty string means tracing export is disabled. */
+    /**
+      * Empty string means tracing export is disabled.
+      */
     otelEndpoint: String,
     logLevel: LogLevel,
     metricsEnabled: Boolean,
@@ -146,7 +161,9 @@ final case class JwtConfig(
     audience: NonEmptyString,
     accessTokenTtl: FiniteDuration,
     refreshTokenTtl: FiniteDuration,
-    /** HS256+ key; rotate via secrets manager. */
+    /**
+      * HS256+ key; rotate via secrets manager.
+      */
     signingKey: NonEmptyString
 ) derives ConfigReader
 
@@ -167,7 +184,8 @@ final case class AppConfig(
 
 object AppConfig {
 
-  /** Default Lightbend Config (loads application.conf + reference.conf + env vars).
+  /**
+    * Default Lightbend Config (loads application.conf + reference.conf + env vars).
     */
   def load[F[_]: Sync]: F[AppConfig] =
     Sync[F].delay(ConfigFactory.load()).flatMap { raw =>
@@ -180,7 +198,9 @@ object AppConfig {
       )
     }
 
-  /** Test/override entrypoint — load from a custom HOCON string. */
+  /**
+    * Test/override entrypoint — load from a custom HOCON string.
+    */
   def loadFromString[F[_]: Sync](hocon: String): F[AppConfig] =
     Sync[F].delay(ConfigFactory.parseString(hocon).resolve()).flatMap { raw =>
       Sync[F].fromEither(
@@ -191,4 +211,5 @@ object AppConfig {
           .leftMap(failures => ConfigReaderException[AppConfig](failures))
       )
     }
+
 }

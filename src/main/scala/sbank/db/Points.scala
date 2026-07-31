@@ -1,16 +1,19 @@
 package sbank.db
 
-import sbank.domain.*
-import cats.syntax.all.*
-import skunk.*
-import skunk.implicits.*
-import skunk.codec.all.*
 import cats.effect.{Concurrent, Resource}
+import cats.syntax.all.*
+
+import sbank.domain.*
+import skunk.*
+import skunk.codec.all.*
+import skunk.implicits.*
 
 trait Points[F[_]] {
+
   def append(entry: PointsLedger): F[PointsLedger]
   def listFor(userId: UserId, limit: Int): F[List[PointsLedger]]
   def balanceFor(userId: UserId): F[Long]
+
 }
 
 object Points {
@@ -30,12 +33,13 @@ object Points {
           )
         )
 
-      /** Balance is computed as the signed sum of the ledger:
+      /**
+        * Balance is computed as the signed sum of the ledger:
         *   - `earn` and positive `adjustment` add
         *   - `redeem` subtracts
         *
-        * Conservatively clamps below at 0 (a ledger that goes negative is a bug upstream — but we'd rather report 0
-        * than a confusing negative balance).
+        * Conservatively clamps below at 0 (a ledger that goes negative is a bug upstream — but we'd
+        * rather report 0 than a confusing negative balance).
         */
       def balanceFor(userId: UserId): F[Long] =
         pool
@@ -44,6 +48,7 @@ object Points {
     }
 
   private object Q {
+
     val insert: Query[PointsLedger, PointsLedger] =
       sql"""INSERT INTO points_ledger (id, user_id, kind, amount, cents_value, related_transaction_id,
                                         related_video_id, note, created_at)
@@ -63,5 +68,7 @@ object Points {
                                   ELSE amount
                                 END), 0)::bigint
             FROM points_ledger WHERE user_id = $userIdC""".query(int8)
+
   }
+
 }

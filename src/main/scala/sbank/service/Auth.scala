@@ -1,31 +1,37 @@
 package sbank.service
 
-import sbank.domain.*
-import sbank.db.Users
+import java.time.Instant
+import java.util.UUID
 
 import cats.effect.*
 import cats.syntax.all.*
-import java.time.Instant
-import java.util.UUID
+
+import sbank.db.Users
+import sbank.domain.*
 import com.password4j.Password
 
 trait Auth[F[_]] {
+
   def signup(
       email: Email,
       phone: PhoneE164,
       password: String,
       fullName: FullName
   ): F[Either[Auth.Error, User]]
+
   def login(email: Email, password: String): F[Either[Auth.Error, User]]
+
 }
 
 object Auth {
 
   sealed trait Error
   object Error {
-    case object EmailTaken extends Error
-    case object PasswordTooWeak extends Error
+
+    case object EmailTaken         extends Error
+    case object PasswordTooWeak    extends Error
     case object InvalidCredentials extends Error
+
   }
 
   def make[F[_]: Sync](users: Users[F]): Auth[F] = new Auth[F] {
@@ -44,26 +50,26 @@ object Auth {
             case None    =>
               for {
                 hash <- Sync[F].delay(
-                  Password
-                    .hash(password)
-                    .`with`(com.password4j.AlgorithmFinder.getBcryptInstance)
-                    .getResult
-                )
+                          Password
+                            .hash(password)
+                            .`with`(com.password4j.AlgorithmFinder.getBcryptInstance)
+                            .getResult
+                        )
                 now <- Sync[F].delay(Instant.now())
-                u = User(
-                  id = UserId.assume(UUID.randomUUID()),
-                  email = email,
-                  phone = phone,
-                  passwordHash = PasswordHash.assume(hash),
-                  fullName = fullName,
-                  ssnHash = None,
-                  ssnLast4 = None,
-                  dateOfBirth = None,
-                  kycStatus = KycStatus.NotStarted,
-                  cachedCreditScore = None,
-                  cachedCreditScoreAt = None,
-                  createdAt = now
-                )
+                u    = User(
+                      id = UserId.assume(UUID.randomUUID()),
+                      email = email,
+                      phone = phone,
+                      passwordHash = PasswordHash.assume(hash),
+                      fullName = fullName,
+                      ssnHash = None,
+                      ssnLast4 = None,
+                      dateOfBirth = None,
+                      kycStatus = KycStatus.NotStarted,
+                      cachedCreditScore = None,
+                      cachedCreditScoreAt = None,
+                      createdAt = now
+                    )
                 saved <- users.create(u)
               } yield Right(saved)
           }
@@ -84,4 +90,5 @@ object Auth {
     if (p.length < 8 || !p.exists(_.isDigit) || !p.exists(_.isLetter))
       Left(Error.PasswordTooWeak)
     else Right(())
+
 }

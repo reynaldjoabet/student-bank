@@ -1,10 +1,12 @@
 package sbank.domain
 
+import java.time.Instant
+import java.util.UUID
+
+import scala.util.control.Exception.allCatch
+
 import io.github.iltotore.iron.*
 import io.github.iltotore.iron.constraint.all.*
-import java.util.UUID
-import java.time.Instant
-import scala.util.control.Exception.allCatch
 // ---------- Identifiers ----------
 
 type UserId = UserId.T
@@ -49,13 +51,15 @@ object SupportTicketId extends RefinedType[UUID, Pure] {}
 // ---------- Contact ----------
 
 type EmailConstraint = Not[Blank] & MaxLength[254] & Match["""^[^@\s]+@[^@\s]+\.[^@\s]+$"""]
-type Email = Email.T
+type Email           = Email.T
 object Email extends RefinedType[String, EmailConstraint] {}
 
 type FullName = FullName.T
 object FullName extends RefinedType[String, Not[Blank] & MaxLength[200]] {}
 
-/** E.164 phone number. */
+/**
+  * E.164 phone number.
+  */
 type PhoneE164 = PhoneE164.T
 object PhoneE164 extends RefinedType[String, Match["""^\+[1-9][0-9]{7,14}$"""]] {}
 
@@ -64,28 +68,37 @@ object PasswordHash extends RefinedType[String, Not[Blank] & MaxLength[120]] {}
 
 // ---------- Sensitive PII handling ----------
 
-/** SSN is *never* stored in plaintext. We keep an HMAC of the SSN (deterministic so we can look up by SSN at the
-  * boundary) plus the last 4 for display. The raw SSN passes through the boundary briefly, validated by this type and
-  * then discarded.
+/**
+  * SSN is *never* stored in plaintext. We keep an HMAC of the SSN (deterministic so we can look up
+  * by SSN at the boundary) plus the last 4 for display. The raw SSN passes through the boundary
+  * briefly, validated by this type and then discarded.
   */
 type Ssn = Ssn.T
 object Ssn extends RefinedType[String, FixedLength[9] & Match["^[0-9]{9}$"]] {}
 
-/** Hex-encoded HMAC-SHA256 of the SSN. 64 hex chars. */
+/**
+  * Hex-encoded HMAC-SHA256 of the SSN. 64 hex chars.
+  */
 type SsnHash = SsnHash.T
 object SsnHash extends RefinedType[String, FixedLength[64] & Match["^[0-9a-f]{64}$"]] {}
 
-/** Last 4 digits of SSN, for "verify your identity" UX flows. */
+/**
+  * Last 4 digits of SSN, for "verify your identity" UX flows.
+  */
 type SsnLast4 = SsnLast4.T
 object SsnLast4 extends RefinedType[String, FixedLength[4] & Match["^[0-9]{4}$"]] {}
 
 // ---------- Card data (PCI-safe) ----------
 
-/** Tokenised card reference issued by Galileo. */
+/**
+  * Tokenised card reference issued by Galileo.
+  */
 type CardToken = CardToken.T
 object CardToken extends RefinedType[String, Not[Blank] & MaxLength[128]] {}
 
-/** Galileo "PRN" — the human-readable account-relationship number. */
+/**
+  * Galileo "PRN" — the human-readable account-relationship number.
+  */
 type GalileoPrn = GalileoPrn.T
 object GalileoPrn extends RefinedType[String, Match["^[0-9]{9,16}$"]] {}
 
@@ -100,12 +113,16 @@ object CardBrand extends RefinedType[String, Not[Blank] & MaxLength[32]] {}
 
 // ---------- Money ----------
 
-/** Amount in minor units (cents). Signed: positive = inflow / refund, negative = outflow / purchase.
+/**
+  * Amount in minor units (cents). Signed: positive = inflow / refund, negative = outflow /
+  * purchase.
   */
 type AmountMinor = AmountMinor.T
 object AmountMinor extends RefinedType[Long, Pure] {}
 
-/** Strictly-positive amount — payments, credit limits, loan principal. */
+/**
+  * Strictly-positive amount — payments, credit limits, loan principal.
+  */
 type PositiveAmount = PositiveAmount.T
 object PositiveAmount extends RefinedType[Long, Positive] {}
 
@@ -116,35 +133,44 @@ object CurrencyCode extends RefinedType[String, Match["^[A-Z]{3}$"]] {
 
 // ---------- Credit scoring ----------
 
-/** FICO credit score range: 300..850. Iron rejects anything outside the band so neither the model nor the UI can render
-  * a synthetic 0 or 999.
+/**
+  * FICO credit score range: 300..850. Iron rejects anything outside the band so neither the model
+  * nor the UI can render a synthetic 0 or 999.
   */
 type CreditScore = CreditScore.T
 object CreditScore extends RefinedType[Int, GreaterEqual[300] & LessEqual[850]] {}
 
-/** Annual percentage rate in basis points (0..100_000 = 0%..1000% — caps usurious values).
+/**
+  * Annual percentage rate in basis points (0..100_000 = 0%..1000% — caps usurious values).
   */
 type AprBps = AprBps.T
 object AprBps extends RefinedType[Int, GreaterEqual[0] & LessEqual[100_000]] {}
 
-/** Credit limit in cents — strictly positive. */
+/**
+  * Credit limit in cents — strictly positive.
+  */
 type CreditLimit = CreditLimit.T
 object CreditLimit extends RefinedType[Long, Positive] {}
 
 // ---------- Points ----------
 
-/** Earned/balance points — non-negative integer. */
+/**
+  * Earned/balance points — non-negative integer.
+  */
 type Points = Points.T
 object Points extends RefinedType[Long, GreaterEqual[0]] {}
 
-/** Cents-per-point conversion rate. 100 = 1 USD per point; 10 = $0.10 per point.
+/**
+  * Cents-per-point conversion rate. 100 = 1 USD per point; 10 = $0.10 per point.
   */
 type PointsPerCent = PointsPerCent.T
 object PointsPerCent extends RefinedType[Int, Positive] {}
 
 // ---------- Identifiers & text ----------
 
-/** YouTube video id: 11 URL-safe characters. */
+/**
+  * YouTube video id: 11 URL-safe characters.
+  */
 type YoutubeVideoId = YoutubeVideoId.T
 object YoutubeVideoId
     extends RefinedType[
@@ -158,7 +184,9 @@ object Title extends RefinedType[String, Not[Blank] & MaxLength[200]] {}
 type Body = Body.T
 object Body extends RefinedType[String, Not[Blank] & MaxLength[8000]] {}
 
-/** Linked-account routing + account, similar shape to remittance project. */
+/**
+  * Linked-account routing + account, similar shape to remittance project.
+  */
 type RoutingNumber = RoutingNumber.T
 object RoutingNumber extends RefinedType[String, FixedLength[9] & Match["^[0-9]{9}$"]] {}
 
@@ -170,7 +198,9 @@ object AccountNumber
 
 // ---------- Storage references ----------
 
-/** Object key into the blob store (Azure-flavoured). */
+/**
+  * Object key into the blob store (Azure-flavoured).
+  */
 type BlobRef = BlobRef.T
 object BlobRef
     extends RefinedType[String, Not[
@@ -207,7 +237,7 @@ enum NotificationChannel { case Push, Email, Sms }
 
 enum AutoPayCadence { case Weekly, BiWeekly, Monthly }
 
-type NonEmpty = MinLength[1]
+type NonEmpty     = MinLength[1]
 type FederationId = FederationId.T
 object FederationId extends RefinedType[String, NonEmpty]
 
@@ -215,8 +245,8 @@ type Identifier = Identifier.T
 object Identifier extends RefinedType[String, Not[Blank]]
 
 given CanEqual[Identifier, Identifier] = CanEqual.derived
-given CanEqual[Identifier, String] = CanEqual.derived
-given CanEqual[String, Identifier] = CanEqual.derived
+given CanEqual[Identifier, String]     = CanEqual.derived
+given CanEqual[String, Identifier]     = CanEqual.derived
 
 type GivenName = GivenName.T
 object GivenName extends RefinedType[String, MinLength[1] & MaxLength[32]]
@@ -230,14 +260,17 @@ type ValidName = Trimmed & Not[Blank] & MinLength[3] & MaxLength[64]
 final case class Coupon(code: Coupon.Code, discount: Coupon.Discount)
 
 object Coupon {
+
   type Code = Code.T
   object Code extends RefinedType[String, ValidCode]
 
   type Discount = Discount.T
   object Discount extends RefinedType[Int, Percentage]
+
 }
 
 object Product {
+
   type Name = Name.T
   object Name extends RefinedType[String, ValidName]
 
@@ -249,6 +282,7 @@ object Product {
 
   type Tax = Tax.T
   object Tax extends RefinedType[Int, Percentage]
+
 }
 
 final case class Product(
@@ -258,40 +292,51 @@ final case class Product(
     tax: Product.Tax
 )
 
-/** Weekly budgeted hours constrained to the inclusive range `0` to `168`. */
+/**
+  * Weekly budgeted hours constrained to the inclusive range `0` to `168`.
+  */
 type WeeklyHours = WeeklyHours.T
 
-/** Refined type companion for `WeeklyHours`. */
+/**
+  * Refined type companion for `WeeklyHours`.
+  */
 object WeeklyHours extends RefinedType[Int, GreaterEqual[0] & LessEqual[168]]
 
-/** Daily working hours constrained to the inclusive range `0` to `24`. */
+/**
+  * Daily working hours constrained to the inclusive range `0` to `24`.
+  */
 type DailyHours = DailyHours.T
 
-/** Refined type companion for `DailyHours`. */
+/**
+  * Refined type companion for `DailyHours`.
+  */
 object DailyHours extends RefinedType[Int, GreaterEqual[0] & LessEqual[24]]
 
 type NonEmptyTrimmedLowerCase = Trimmed & LettersLowerCase & MinLength[1] & MaxLength[255]
-type NonEmptyTrimmed = Trimmed & MinLength[1] & MaxLength[255]
-type TokenPredicate = Trimmed & MinLength[1]
-type NonEmpty2 = MinLength[1] & MaxLength[1000]
+type NonEmptyTrimmed          = Trimmed & MinLength[1] & MaxLength[255]
+type TokenPredicate           = Trimmed & MinLength[1]
+type NonEmpty2                = MinLength[1] & MaxLength[1000]
 
 type PasswordPredicate =
   Match[
     "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%#*^,?)(&._-])[A-Za-z\\d@$!%#*^,?)(&._-]{8,72}$"
   ]
-type EmailPredicate = Match["^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"] & MaxLength[255]
-type OtpPredicate = Match["^[A-Z0-9]{6}$"]
-type WahaIDPredicate = NonEmptyTrimmedLowerCase & EndWith["@c.us"]
+
+type EmailPredicate       = Match["^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"] & MaxLength[255]
+type OtpPredicate         = Match["^[A-Z0-9]{6}$"]
+type WahaIDPredicate      = NonEmptyTrimmedLowerCase & EndWith["@c.us"]
 type WahaGroupIDPredicate = NonEmptyTrimmedLowerCase & EndWith["@g.us"]
-type WahaUserIDPredicate = NonEmptyTrimmedLowerCase & EndWith["@lid"]
-type WhatsappIDPredicate = NonEmptyTrimmedLowerCase & EndWith["@s.whatsapp.net"]
+type WahaUserIDPredicate  = NonEmptyTrimmedLowerCase & EndWith["@lid"]
+type WhatsappIDPredicate  = NonEmptyTrimmedLowerCase & EndWith["@s.whatsapp.net"]
 
 trait RefinedTypeUUID extends RefinedType[UUID, Pure] {
+
   def eitherFromString(s: String): Either[String, T] =
     allCatch
       .either(apply(UUID.fromString(s)))
       .left
       .map(error => s"Invalid UUID format error: [${error.getMessage}]")
+
 }
 
 object AppName extends RefinedType[String, Pure]
@@ -390,24 +435,34 @@ type OrganizationPostalCode = OrganizationPostalCode.T
 object OrganizationCountry extends RefinedType[String, NonEmptyTrimmed]
 type OrganizationCountry = OrganizationCountry.T
 
-/** Unique identifier for a task. */
+/**
+  * Unique identifier for a task.
+  */
 type TaskId = UUID
 
-/** Refined constraint for a non-empty task name. */
+/**
+  * Refined constraint for a non-empty task name.
+  */
 type TaskName = DescribedAs[Not[Empty], "The task name must be alphanumeric"]
 
-/** Refined constraint for a non-empty task description. */
+/**
+  * Refined constraint for a non-empty task description.
+  */
 type TaskDescription =
   DescribedAs[Not[Empty], "The task description must be alphanumeric"]
 
-/** Estimated duration of a task in hours. */
+/**
+  * Estimated duration of a task in hours.
+  */
 type TaskHours = TaskHours.T
 
-/** Refined type companion for `TaskHours`, including arithmetic helpers and a `Monoid` instance.
+/**
+  * Refined type companion for `TaskHours`, including arithmetic helpers and a `Monoid` instance.
   */
 object TaskHours extends RefinedType[Int, Positive0]
 
-/** Immutable task definition used inside manufacturings.
+/**
+  * Immutable task definition used inside manufacturings.
   *
   * @param id
   *   Stable task identifier.

@@ -1,23 +1,25 @@
 package sbank.db
 
-import sbank.domain.*
-
 import cats.effect.*
 import cats.syntax.all.*
+
+import sbank.domain.*
 import skunk.*
 import skunk.implicits.*
 
 trait Cards[F[_]] {
+
   def insert(c: Card): F[Card]
   def find(id: CardId): F[Option[Card]]
   def listFor(userId: UserId): F[List[Card]]
   def setStatus(id: CardId, status: CardStatus): F[Unit]
   def adjustBalance(id: CardId, deltaMinor: Long): F[Unit]
+
 }
 
 object Cards {
 
-  import Codecs.{card as cardC, cardId as cardIdC, userId as userIdC, cardStatus as statusC}
+  import Codecs.{card as cardC, cardId as cardIdC, cardStatus as statusC, userId as userIdC}
   import skunk.codec.all.int8
 
   def make[F[_]: Concurrent](pool: Resource[F, Session[F]]): Cards[F] =
@@ -38,6 +40,7 @@ object Cards {
     }
 
   private object Q {
+
     val insert: Query[Card, Card] =
       sql"""INSERT INTO cards (id, user_id, galileo_prn, token, brand, last4, expiry, status,
                                 credit_limit, balance_minor, apr_bps, issued_at, created_at)
@@ -63,5 +66,7 @@ object Cards {
 
     val adjust: Command[(Long, CardId)] =
       sql"UPDATE cards SET balance_minor = balance_minor + $int8 WHERE id = $cardIdC".command
+
   }
+
 }

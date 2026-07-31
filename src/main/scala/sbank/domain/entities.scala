@@ -10,12 +10,15 @@ final case class User(
     phone: PhoneE164,
     passwordHash: PasswordHash,
     fullName: FullName,
-    /** Deterministic SSN hash; null until KYC submission completes. */
+    /**
+      * Deterministic SSN hash; null until KYC submission completes.
+      */
     ssnHash: Option[SsnHash],
     ssnLast4: Option[SsnLast4],
     dateOfBirth: Option[LocalDate],
     kycStatus: KycStatus,
-    /** Last computed credit score (cached; refreshed by [[CreditScoreService]]).
+    /**
+      * Last computed credit score (cached; refreshed by [[CreditScoreService]]).
       */
     cachedCreditScore: Option[CreditScore],
     cachedCreditScoreAt: Option[Instant],
@@ -27,7 +30,9 @@ final case class User(
 final case class Card(
     id: CardId,
     userId: UserId,
-    /** Galileo's PRN — joins our row to their account. */
+    /**
+      * Galileo's PRN — joins our row to their account.
+      */
     galileoPrn: GalileoPrn,
     token: CardToken,
     brand: CardBrand,
@@ -35,7 +40,9 @@ final case class Card(
     expiry: CardExpiry,
     status: CardStatus,
     creditLimit: CreditLimit,
-    /** Outstanding balance in cents — positive means user owes us money. */
+    /**
+      * Outstanding balance in cents — positive means user owes us money.
+      */
     balanceMinor: Long,
     aprBps: AprBps,
     issuedAt: Option[Instant],
@@ -48,13 +55,17 @@ final case class CardTransaction(
     id: TransactionId,
     cardId: CardId,
     kind: TransactionKind,
-    /** Signed; sign carries direction (negative for purchases). */
+    /**
+      * Signed; sign carries direction (negative for purchases).
+      */
     amountMinor: AmountMinor,
     currency: CurrencyCode,
     merchant: Option[Title],
     occurredAt: Instant,
     status: TransactionStatus,
-    /** Galileo reference for the underlying authorisation / capture. */
+    /**
+      * Galileo reference for the underlying authorisation / capture.
+      */
     galileoRef: Option[String]
 )
 
@@ -78,7 +89,9 @@ final case class Loan(
     aprBps: AprBps,
     termMonths: Int,
     status: LoanStatus,
-    /** Outstanding principal remaining; capped >= 0 by service logic. */
+    /**
+      * Outstanding principal remaining; capped >= 0 by service logic.
+      */
     remainingMinor: Long,
     appliedAt: Instant,
     disbursedAt: Option[Instant]
@@ -114,7 +127,8 @@ final case class PointsLedger(
     userId: UserId,
     kind: PointsEventKind,
     amount: Points,
-    /** Cents value at the moment of the transaction; useful for audits of conversion rates.
+    /**
+      * Cents value at the moment of the transaction; useful for audits of conversion rates.
       */
     centsValue: Long,
     relatedTransactionId: Option[TransactionId],
@@ -126,7 +140,9 @@ final case class PointsLedger(
 final case class PointsBalance(
     userId: UserId,
     balance: Points,
-    /** Convertible at the active rate to USD cents. */
+    /**
+      * Convertible at the active rate to USD cents.
+      */
     centsValue: Long
 )
 
@@ -156,7 +172,9 @@ final case class WatchProgress(
 final case class TaxDocument(
     id: TaxDocumentId,
     userId: UserId,
-    /** Year the document covers (e.g. 2026 for a 1099 issued in early 2027). */
+    /**
+      * Year the document covers (e.g. 2026 for a 1099 issued in early 2027).
+      */
     taxYear: Int,
     documentType: String, // '1099-INT' | '1099-MISC' | '1098-E' (student loan interest)
     blobRef: BlobRef,

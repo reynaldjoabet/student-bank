@@ -1,19 +1,22 @@
 package sbank.db
 
-import sbank.domain.*
+import java.time.Instant
 
 import cats.effect.*
 import cats.syntax.all.*
-import skunk.*
-import skunk.implicits.*
-import skunk.codec.all.*
 
-import java.time.Instant
+import sbank.domain.*
+import skunk.*
+import skunk.codec.all.*
+import skunk.implicits.*
+
 trait Users[F[_]] {
+
   def create(u: User): F[User]
   def find(id: UserId): F[Option[User]]
   def findByEmail(email: Email): F[Option[User]]
   def findBySsnHash(hash: SsnHash): F[Option[User]]
+
   def updateKyc(
       id: UserId,
       status: KycStatus,
@@ -21,12 +24,22 @@ trait Users[F[_]] {
       ssnLast4: Option[SsnLast4],
       dob: Option[java.time.LocalDate]
   ): F[Unit]
+
   def cacheCreditScore(id: UserId, score: CreditScore, at: Instant): F[Unit]
+
 }
 
 object Users {
 
-  import Codecs.{user as userC, userId as userIdC, email as emailC, kycStatus, ssnHash, ssnLast4, creditScore}
+  import Codecs.{
+    creditScore,
+    email as emailC,
+    kycStatus,
+    ssnHash,
+    ssnLast4,
+    user as userC,
+    userId as userIdC
+  }
 
   def make[F[_]: Concurrent](pool: Resource[F, Session[F]]): Users[F] =
     new Users[F] {
@@ -69,6 +82,7 @@ object Users {
     }
 
   private object Q {
+
     val insert: Query[User, User] =
       sql"""INSERT INTO users (id, email, phone, password_hash, full_name, ssn_hash, ssn_last4,
                                 date_of_birth, kyc_status, cached_credit_score, cached_credit_score_at, created_at)
@@ -112,5 +126,7 @@ object Users {
       sql"""UPDATE users
             SET cached_credit_score = $creditScore, cached_credit_score_at = $timestamptz
             WHERE id = $userIdC""".command
+
   }
+
 }

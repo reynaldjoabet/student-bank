@@ -1,16 +1,19 @@
 package sbank.db
 
-import sbank.domain.*
-import cats.syntax.all.*
-import skunk.*
-import skunk.implicits.*
-import skunk.codec.all.*
 import cats.effect.{Concurrent, Resource}
+import cats.syntax.all.*
+
+import sbank.domain.*
+import skunk.*
+import skunk.codec.all.*
+import skunk.implicits.*
 
 trait TaxDocs[F[_]] {
+
   def insert(d: TaxDocument): F[TaxDocument]
   def listFor(userId: UserId): F[List[TaxDocument]]
   def find(id: TaxDocumentId): F[Option[TaxDocument]]
+
 }
 
 object TaxDocs {
@@ -31,6 +34,7 @@ object TaxDocs {
     }
 
   private object Q {
+
     val insert: Query[TaxDocument, TaxDocument] =
       sql"""INSERT INTO tax_documents (id, user_id, tax_year, document_type, blob_ref, issued_on, created_at)
             VALUES $docC
@@ -47,5 +51,7 @@ object TaxDocs {
             FROM tax_documents WHERE id = $docIdC""".query(docC)
 
     val _ = int4
+
   }
+
 }

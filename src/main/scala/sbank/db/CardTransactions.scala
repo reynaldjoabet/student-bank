@@ -1,27 +1,30 @@
 package sbank.db
 
-import sbank.domain.*
-import skunk.syntax.all.sql
 import cats.effect.*
 import cats.syntax.all.*
+
+import sbank.domain.*
 import skunk.*
+import skunk.syntax.all.sql
 
 trait CardTransactions[F[_]] {
+
   def insert(t: CardTransaction): F[CardTransaction]
   def listFor(cardId: CardId, limit: Int): F[List[CardTransaction]]
   def setStatus(id: TransactionId, status: TransactionStatus): F[Unit]
   def openDispute(d: Dispute): F[Dispute]
   def listDisputes(userId: UserId): F[List[Dispute]]
+
 }
 
 object CardTransactions {
 
   import Codecs.{
+    cardId as cardIdC,
+    dispute as disputeC,
     transaction as txC,
     transactionId as txIdC,
-    cardId as cardIdC,
     transactionStatus as statusC,
-    dispute as disputeC,
     userId as userIdC
   }
   import skunk.codec.all.int4
@@ -54,6 +57,7 @@ object CardTransactions {
     }
 
   private object Q {
+
     val insertTx: Query[CardTransaction, CardTransaction] =
       sql"""INSERT INTO card_transactions (id, card_id, kind, amount_minor, currency, merchant,
                                             occurred_at, status, galileo_ref)
@@ -80,5 +84,7 @@ object CardTransactions {
       sql"""SELECT id, transaction_id, user_id, reason, status, opened_at, resolved_at
             FROM disputes WHERE user_id = $userIdC ORDER BY opened_at DESC"""
         .query(disputeC)
+
   }
+
 }

@@ -1,24 +1,30 @@
 package sbank.service
 
-import sbank.domain.*
-import sbank.db.Users
-import sbank.external.CreditBureau
+import java.time.{Duration, Instant}
 
 import cats.effect.*
 import cats.syntax.all.*
-import java.time.{Duration, Instant}
 
-/** Caches the user's FICO score with a configurable TTL so each "what's my score" tap doesn't trigger a real Experian
-  * pull.
+import sbank.db.Users
+import sbank.domain.*
+import sbank.external.CreditBureau
+
+/**
+  * Caches the user's FICO score with a configurable TTL so each "what's my score" tap doesn't
+  * trigger a real Experian pull.
   */
 trait CreditScoreService[F[_]] {
+
   def current(userId: UserId): F[Option[CreditScore]]
   def refresh(userId: UserId): F[Option[CreditScore]]
+
 }
 
 object CreditScoreService {
 
-  /** Real production policy might be longer (24h) — fresh enough to feel dynamic, gentle on the upstream rate limit.
+  /**
+    * Real production policy might be longer (24h) — fresh enough to feel dynamic, gentle on the
+    * upstream rate limit.
     */
   val CacheTtl: Duration = Duration.ofHours(6)
 
@@ -44,8 +50,8 @@ object CreditScoreService {
           case Some(u) if u.ssnHash.isDefined =>
             for {
               score <- bureau.fico(u.ssnHash.get)
-              now <- Async[F].delay(Instant.now())
-              _ <- users.cacheCreditScore(userId, score, now)
+              now   <- Async[F].delay(Instant.now())
+              _     <- users.cacheCreditScore(userId, score, now)
             } yield Some(score)
           case _ => Async[F].pure(None)
         }
@@ -53,4 +59,5 @@ object CreditScoreService {
       private def expired(at: Instant): Boolean =
         Duration.between(at, Instant.now()).compareTo(CacheTtl) > 0
     }
+
 }

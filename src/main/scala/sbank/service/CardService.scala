@@ -1,34 +1,40 @@
 package sbank.service
 
-import sbank.domain.*
-import sbank.db.{Cards, Users}
-import sbank.external.Galileo
-import cats.effect.*
-import cats.syntax.all.*
-
 import java.time.Instant
 import java.util.UUID
 
-/** Card application + lifecycle.
+import cats.effect.*
+import cats.syntax.all.*
+
+import sbank.db.{Cards, Users}
+import sbank.domain.*
+import sbank.external.Galileo
+
+/**
+  * Card application + lifecycle.
   *
-  * Credit-line decisioning is driven by the cached FICO score. Anything under 580 is rejected; up to 720 gets a starter
-  * $500 line; 720+ gets $2_000. The thresholds live in one place so the policy can be tuned without changes to the
-  * Galileo wiring.
+  * Credit-line decisioning is driven by the cached FICO score. Anything under 580 is rejected; up
+  * to 720 gets a starter $500 line; 720+ gets $2_000. The thresholds live in one place so the
+  * policy can be tuned without changes to the Galileo wiring.
   */
 trait CardService[F[_]] {
+
   def apply(userId: UserId): F[Either[CardService.Error, Card]]
   def activate(cardId: CardId): F[Unit]
   def freeze(cardId: CardId): F[Unit]
+
 }
 
 object CardService {
 
   sealed trait Error
   object Error {
-    case object UserNotFound extends Error
-    case object KycRequired extends Error
+
+    case object UserNotFound  extends Error
+    case object KycRequired   extends Error
     case object NoCreditScore extends Error
-    case object Underwriting extends Error
+    case object Underwriting  extends Error
+
   }
 
   def make[F[_]: Async](
@@ -51,28 +57,28 @@ object CardService {
                 case Some(terms) =>
                   for {
                     issued <- galileo.issueCard(
-                      userId,
-                      u.fullName,
-                      "(student address)"
-                    )
+                                userId,
+                                u.fullName,
+                                "(student address)"
+                              )
                     now <- Async[F].delay(Instant.now())
                     card = Card(
-                      id = CardId.assume(UUID.randomUUID()),
-                      userId = userId,
-                      galileoPrn = issued.prn,
-                      token = issued.token,
-                      brand = issued.brand,
-                      last4 = issued.last4,
-                      expiry = issued.expiry,
-                      status = CardStatus.Issued,
-                      creditLimit = terms.limit,
-                      balanceMinor = 0L,
-                      aprBps = terms.apr,
-                      issuedAt = Some(now),
-                      createdAt = now
-                    )
+                             id = CardId.assume(UUID.randomUUID()),
+                             userId = userId,
+                             galileoPrn = issued.prn,
+                             token = issued.token,
+                             brand = issued.brand,
+                             last4 = issued.last4,
+                             expiry = issued.expiry,
+                             status = CardStatus.Issued,
+                             creditLimit = terms.limit,
+                             balanceMinor = 0L,
+                             aprBps = terms.apr,
+                             issuedAt = Some(now),
+                             createdAt = now
+                           )
                     saved <- cards.insert(card)
-                    _ <- galileo.setCreditLimit(issued.prn, terms.limit)
+                    _     <- galileo.setCreditLimit(issued.prn, terms.limit)
                   } yield Right(saved)
               }
           }
@@ -99,9 +105,11 @@ object CardService {
       }
   }
 
-  /** Underwriting policy. Centralised so it can be A/B'd or replaced wholesale.
+  /**
+    * Underwriting policy. Centralised so it can be A/B'd or replaced wholesale.
     */
   private final case class Terms(limit: CreditLimit, apr: AprBps)
+
   private def underwrite(score: CreditScore): Option[Terms] =
     score.value match {
       case s if s < 580 => None
@@ -118,4 +126,5 @@ object CardService {
           Terms(CreditLimit.applyUnsafe(200_000), AprBps.applyUnsafe(1_999))
         ) // $2,000 / 19.99%
     }
+
 }
