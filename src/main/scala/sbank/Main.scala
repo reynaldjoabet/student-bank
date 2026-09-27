@@ -6,8 +6,8 @@ import com.comcast.ip4s.*
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.server.middleware.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-import org.typelevel.otel4s.metrics.Meter.Implicits.noop
-import org.typelevel.otel4s.trace.Tracer.Implicits.noop
+import org.typelevel.otel4s.metrics.MeterProvider
+import org.typelevel.otel4s.trace.TracerProvider
 import sbank.config.*
 import sbank.db.*
 import sbank.external.*
@@ -16,6 +16,9 @@ import sbank.service.*
 import skunk.Session
 
 object Main extends IOApp.Simple {
+
+  private given TracerProvider[IO] = TracerProvider.noop[IO]
+  private given MeterProvider[IO]  = MeterProvider.noop[IO]
 
   def run: IO[Unit] = {
     val logger = Slf4jLogger.getLogger[IO]
