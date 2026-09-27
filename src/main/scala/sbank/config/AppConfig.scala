@@ -35,8 +35,8 @@ object PositiveLong extends RefinedType[Long, Positive]
 /**
   * Postgres SSL modes; mirrors libpq's sslmode parameter.
   */
-enum SslMode   { case Disable, Allow, Prefer, Require, VerifyCa, VerifyFull }
-object SslMode {
+enum SslMode derives CanEqual { case Disable, Allow, Prefer, Require, VerifyCa, VerifyFull }
+object SslMode                {
 
   given ConfigReader[SslMode] = ConfigReader[String].emap { raw =>
     raw.trim.toLowerCase.replace('_', '-') match {
@@ -72,8 +72,8 @@ object SslMode {
 
 }
 
-enum LogLevel   { case Trace, Debug, Info, Warn, Error }
-object LogLevel {
+enum LogLevel derives CanEqual { case Trace, Debug, Info, Warn, Error }
+object LogLevel                {
 
   given ConfigReader[LogLevel] = ConfigReader[String].emap { raw =>
     raw.trim.toLowerCase match {
@@ -95,8 +95,8 @@ object LogLevel {
 
 }
 
-enum SecretsBackend   { case Env, Vault }
-object SecretsBackend {
+enum SecretsBackend derives CanEqual { case Env, Vault }
+object SecretsBackend                {
 
   given ConfigReader[SecretsBackend] = ConfigReader[String].emap { raw =>
     raw.trim.toLowerCase match {

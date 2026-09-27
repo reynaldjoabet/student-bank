@@ -209,33 +209,33 @@ object BlobRef
 
 // ---------- Enums ----------
 
-enum KycStatus { case NotStarted, Pending, Approved, Rejected }
+enum KycStatus derives CanEqual { case NotStarted, Pending, Approved, Rejected }
 
-enum CardStatus { case Applied, Issued, Active, Frozen, Cancelled }
+enum CardStatus derives CanEqual { case Applied, Issued, Active, Frozen, Cancelled }
 
-enum TransactionKind {
+enum TransactionKind derives CanEqual {
   case Purchase, Refund, Fee, Interest, Payment, CashbackAccrual, Adjustment
 }
 
-enum TransactionStatus { case Pending, Posted, Disputed, Reversed, Declined }
+enum TransactionStatus derives CanEqual { case Pending, Posted, Disputed, Reversed, Declined }
 
-enum DisputeStatus { case Open, ResolvedCustomer, ResolvedMerchant, Withdrawn }
+enum DisputeStatus derives CanEqual { case Open, ResolvedCustomer, ResolvedMerchant, Withdrawn }
 
-enum LoanKind { case Student, Personal }
+enum LoanKind derives CanEqual { case Student, Personal }
 
-enum LoanStatus {
+enum LoanStatus derives CanEqual {
   case Applied, Approved, Disbursed, Repaying, PaidOff, Defaulted, Rejected
 }
 
-enum PointsEventKind { case Earn, Redeem, Adjustment }
+enum PointsEventKind derives CanEqual { case Earn, Redeem, Adjustment }
 
-enum NotificationKind {
+enum NotificationKind derives CanEqual {
   case Transaction, Marketing, EducationNew, ScoreUpdate, Support
 }
 
-enum NotificationChannel { case Push, Email, Sms }
+enum NotificationChannel derives CanEqual { case Push, Email, Sms }
 
-enum AutoPayCadence { case Weekly, BiWeekly, Monthly }
+enum AutoPayCadence derives CanEqual { case Weekly, BiWeekly, Monthly }
 
 type NonEmpty     = MinLength[1]
 type FederationId = FederationId.T

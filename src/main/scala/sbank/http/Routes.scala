@@ -14,6 +14,11 @@ import org.http4s.*
 import org.http4s.circe.CirceEntityCodec.*
 import org.http4s.dsl.Http4sDsl
 
+// http4s doesn't ship CanEqual instances; supply them locally so the routing
+// DSL (`case req @ POST -> Root / "path"`) type-checks under strictEquality.
+private given CanEqual[Method, Method]     = CanEqual.derived
+private given CanEqual[Uri.Path, Uri.Path] = CanEqual.derived
+
 final class Routes[F[_]: Async](
     auth: Auth[F],
     onboarding: Onboarding[F],
