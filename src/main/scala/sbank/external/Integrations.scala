@@ -47,7 +47,7 @@ object Galileo {
 
   def sandbox[F[_]: Sync]: F[Galileo[F]] = Sync[F].pure(new Galileo[F] {
     private def randId = Sync[F].delay(
-      java.util.UUID.randomUUID().toString.replaceAll("-", "").take(12)
+      Uuids.random().toString.replaceAll("-", "").take(12)
     )
 
     def issueCard(userId: UserId, name: FullName, address: String): F[Issued] =
@@ -73,7 +73,7 @@ object Galileo {
         amount: PositiveAmount,
         sourceLast4: Last4
     ): F[String] =
-      Sync[F].delay("gal_" + java.util.UUID.randomUUID().toString.take(16))
+      Sync[F].delay("gal_" + Uuids.random().toString.take(16))
   })
 
 }
@@ -141,7 +141,7 @@ object CreditBureau {
           CreditScore.assume(620 + scala.util.Random.nextInt(140))
         ) // 620..759
       def softPull(ssnHash: SsnHash): F[String] =
-        Sync[F].delay("exp_" + java.util.UUID.randomUUID().toString.take(12))
+        Sync[F].delay("exp_" + Uuids.random().toString.take(12))
     })
 
 }

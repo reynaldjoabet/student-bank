@@ -1,7 +1,6 @@
 package sbank.service
 
 import java.time.Instant
-import java.util.UUID
 
 import cats.effect.*
 import cats.syntax.all.*
@@ -80,7 +79,7 @@ object PointsService {
             points
               .append(
                 PointsLedger(
-                  id = PointsLedgerId.assume(UUID.randomUUID()),
+                  id = PointsLedgerId.assume(Uuids.timeOrdered()),
                   userId = userId,
                   kind = PointsEventKind.Earn,
                   amount = sbank.domain.Points.assume(pts),
@@ -113,7 +112,7 @@ object PointsService {
                 now <- Async[F].delay(Instant.now())
                 _   <- points.append(
                        PointsLedger(
-                         id = PointsLedgerId.assume(UUID.randomUUID()),
+                         id = PointsLedgerId.assume(Uuids.timeOrdered()),
                          userId = userId,
                          kind = PointsEventKind.Earn,
                          amount = v.pointsReward,
@@ -148,7 +147,7 @@ object PointsService {
                   cents = ptsAmount.value * 100 / PointsPerCent
                   _    <- points.append(
                          PointsLedger(
-                           id = PointsLedgerId.assume(UUID.randomUUID()),
+                           id = PointsLedgerId.assume(Uuids.timeOrdered()),
                            userId = userId,
                            kind = PointsEventKind.Redeem,
                            amount = ptsAmount,

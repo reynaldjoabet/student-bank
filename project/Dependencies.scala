@@ -17,6 +17,7 @@ object Dependencies {
     val fs2             = "3.14.0"
     val fs2Kafka        = "4.1.3"
     val chimney         = "2.1.0"
+    val uuidGenerator   = "5.2.0"
     val iron            = "3.4.0-RC1"
     val hedgehog        = "0.15.0"
     val scalacheck      = "1.20.0"
@@ -128,7 +129,8 @@ object Dependencies {
 
   object domain {
 
-    val chimney = "io.scalaland" %% "chimney" % Versions.chimney
+    val chimney       = "io.scalaland"      %% "chimney"             % Versions.chimney
+    val uuidGenerator = "com.fasterxml.uuid" % "java-uuid-generator" % Versions.uuidGenerator
 
     object iron {
 
@@ -257,6 +259,7 @@ object Dependencies {
       json.circe.generic,
       json.circe.parser,
       domain.chimney,
+      domain.uuidGenerator,
       domain.iron.core,
       domain.iron.circe,
       domain.iron.skunk,

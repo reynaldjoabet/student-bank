@@ -1,7 +1,6 @@
 package sbank.service
 
 import java.time.{Instant, LocalDate}
-import java.util.UUID
 
 import cats.effect.*
 import cats.syntax.all.*
@@ -49,11 +48,11 @@ object TaxDocService {
           now <- Async[F].delay(Instant.now())
           ref  =
             BlobRef.applyUnsafe(
-              s"users/${userId.value}/${taxYear}_${docType}_${UUID.randomUUID().toString.take(8)}.pdf"
+              s"users/${userId.value}/${taxYear}_${docType}_${Uuids.random().toString.take(8)}.pdf"
             )
           _  <- blob.put(ref, bytes, "application/pdf")
           doc = TaxDocument(
-                  id = TaxDocumentId.assume(UUID.randomUUID()),
+                  id = TaxDocumentId.assume(Uuids.timeOrdered()),
                   userId = userId,
                   taxYear = taxYear,
                   documentType = docType,

@@ -1,7 +1,6 @@
 package sbank.service
 
 import java.time.Instant
-import java.util.UUID
 
 import cats.effect.*
 import cats.syntax.all.*
@@ -57,7 +56,7 @@ object Auth {
                         )
                 now <- Sync[F].delay(Instant.now())
                 u    = User(
-                      id = UserId.assume(UUID.randomUUID()),
+                      id = UserId.assume(Uuids.timeOrdered()),
                       email = email,
                       phone = phone,
                       passwordHash = PasswordHash.assume(hash),

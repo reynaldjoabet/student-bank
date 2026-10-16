@@ -1,7 +1,6 @@
 package sbank.service
 
 import java.time.Instant
-import java.util.UUID
 
 import cats.effect.*
 import cats.syntax.all.*
@@ -63,7 +62,7 @@ object CardService {
                               )
                     now <- Async[F].delay(Instant.now())
                     card = Card(
-                             id = CardId.assume(UUID.randomUUID()),
+                             id = CardId.assume(Uuids.timeOrdered()),
                              userId = userId,
                              galileoPrn = issued.prn,
                              token = issued.token,

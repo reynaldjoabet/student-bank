@@ -177,7 +177,7 @@ final class Routes[F[_]: Async](
       authed(req)(uid =>
         req.as[Json.DisputeBody].flatMap { b =>
           val d = Dispute(
-            DisputeId.assume(UUID.randomUUID()),
+            DisputeId.assume(Uuids.timeOrdered()),
             txId,
             uid,
             b.reason,
@@ -218,7 +218,7 @@ final class Routes[F[_]: Async](
       authed(req)(uid =>
         req.as[Json.LoanApplyBody].flatMap { b =>
           val l = Loan(
-            LoanId.assume(UUID.randomUUID()),
+            LoanId.assume(Uuids.timeOrdered()),
             uid,
             b.kind,
             b.principalMinor,
@@ -239,7 +239,7 @@ final class Routes[F[_]: Async](
       authed(req)(uid =>
         req.as[Json.AddLinkedAccountBody].flatMap { b =>
           val a = LinkedBankAccount(
-            LinkedAccountId.assume(UUID.randomUUID()),
+            LinkedAccountId.assume(Uuids.timeOrdered()),
             uid,
             b.routingNumber,
             b.accountNumberLast4,
@@ -282,7 +282,7 @@ final class Routes[F[_]: Async](
       authed(req)(uid =>
         req.as[Json.ProgressBody].flatMap { b =>
           val wp = WatchProgress(
-            WatchProgressId.assume(UUID.randomUUID()),
+            WatchProgressId.assume(Uuids.timeOrdered()),
             uid,
             vid,
             b.secondsWatched,
