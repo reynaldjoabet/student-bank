@@ -34,7 +34,7 @@ object Dependencies {
     val jwtScala         = "11.0.4"
     val bouncycastle     = "1.86"
     val password4j       = "1.8.4"
-    val auth0            = "4.6.1"
+    val auth0            = "4.6.2"
     val nimbusJoseJwt    = "10.10"
     val nimbusOauth2Oidc = "11.38.2"
     val vault            = "5.1.0"
@@ -44,10 +44,10 @@ object Dependencies {
     val logback  = "1.6.5"
 
     // --- Cache ---
-    val caffeine = "3.3.0"
+    val caffeine = "3.3.1"
 
     // --- Observability ---
-    val datadog = "2.61.0"
+    val datadog = "2.62.0"
     val kamon   = "2.8.1"
     val otel4s  = "1.1.0" // keep in step with skunk-core (2.0.0-RC3 depends on otel4s 1.1.0)
 
