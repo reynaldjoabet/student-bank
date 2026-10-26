@@ -18,7 +18,7 @@ object Dependencies {
     val fs2Kafka        = "4.1.3"
     val chimney         = "2.1.0"
     val uuidGenerator   = "5.2.0"
-    val iron            = "3.4.0-RC1"
+    val iron            = "3.4.1"
     val hedgehog        = "0.15.0"
     val scalacheck      = "1.20.0"
     val munit           = "1.3.6"
@@ -27,11 +27,11 @@ object Dependencies {
     // --- DB ---
     val skunk    = "2.0.0-RC3"
     val hikaricp = "7.1.0"
-    val flyway   = "13.10.3"
+    val flyway   = "13.11.1"
     val postgres = "42.7.14"
 
     // --- Security ---
-    val jwtScala         = "11.0.4"
+    val jwtScala         = "12.0.0"
     val bouncycastle     = "1.86"
     val password4j       = "1.8.4"
     val auth0            = "4.6.2"
